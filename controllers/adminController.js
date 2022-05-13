@@ -1,4 +1,4 @@
-const User = require('../models/User');
+const Users = require('../models/Users');
 require('dotenv').config()
 const PASS_SEC = process.env.PASS_SEC
 
@@ -9,7 +9,7 @@ class AdminController{
            req.body.password = CryptoJS.AES.encrypt(req.body.password,PASS_SEC).toString();
         }
         try {
-            const updateUser = await User.findByIdAndUpdate(req.params.id, {
+            const updateUser = await Users.findByPk(req.params.id, {
                 $set: req.body
             }, {new: true});
             res.status(200).json(updateUser);
@@ -20,16 +20,16 @@ class AdminController{
     
     static deleteUser = async(req, res) => {
         try{
-            await User.findByIdAndDelete(req.params.id)
+            await Users.destroy(req.params.id)
             res.status(200).json("User has been deleted");
         }catch(err) {
             res.status(500).json(err);
         }
     }
     
-    static getAllUsers = async (req, res) => {
+    static getUserById = async (req, res) => {
         try{
-            const user =  await User.findById(req.params.id)
+            const user =  await Users.findByPk(req.params.id)
             const {password, ...others} = user._doc
     
             res.status(200).json(others);
@@ -47,13 +47,14 @@ class AdminController{
             res.status(500).json(err);
         }
     })
+    */
     
-    router.get('/stats',verifyTokenAndAdmin ,async (req, res) => {
+    static getUserForStats = async (req, res) => {
         const date = new Date();
         const lastYear = new Date(date.setFullYear(date.getFullYear() -1));
     
         try {
-            const date = await User.aggregate([
+            const date = await Users.aggregate([
                 {$match: {createdAt : {$gte: lastYear}}},
                 {
                     $project : {
@@ -71,8 +72,8 @@ class AdminController{
         }catch(err) {
             res.status(400).json(err);
         }
-    })
-    */
+    }
+    
 }
 
 module.exports = AdminController;
